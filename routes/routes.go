@@ -1,8 +1,10 @@
 package routes
 
 import (
+	"interview-bank/auth"
 	"interview-bank/database"
 	"interview-bank/handlers"
+	"interview-bank/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,8 +28,14 @@ func SetupRouter() *gin.Engine {
 		authGroup.POST("/login", handlers.Login)
 	}
 
+	jwtWrapper, err := auth.NewJwtWrapper()
+	if err != nil {
+		panic("Error creating JWT wrapper: " + err.Error())
+	}
+
 	// Interview question routes
 	interviewGroup := router.Group("/interviews")
+	interviewGroup.Use(middleware.Authz(jwtWrapper))
 	{
 		interviewGroup.POST("/create", handlers.CreateInterviewQuestionHandler(db))
 		interviewGroup.PUT("/update", handlers.UpdateInterviewQuestionsHandler(db))

@@ -107,13 +107,16 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	jwtWrapper := auth.JwtWrapper{
-		SecretKey:         "verysecretkey",
-		Issuer:            "AuthService",
-		ExpirationMinutes: 1,
-		ExpirationHours:   12,
+	// Create a new JwtWrapper instance
+	jwtWrapper, err := auth.NewJwtWrapper()
+	if err != nil {
+		log.Println(err)
+		c.JSON(500, gin.H{"error": "Error creating JWT wrapper"})
+		c.Abort()
+		return
 	}
 
+	// Generate a signed token
 	signedToken, err := jwtWrapper.GenerateToken(user.Email)
 	if err != nil {
 		log.Println(err)
@@ -122,6 +125,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Generate a signed refresh token
 	signedRefreshToken, err := jwtWrapper.RefreshToken(user.Email)
 	if err != nil {
 		log.Println(err)

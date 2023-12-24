@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"errors"
 	"time"
 
@@ -21,6 +23,29 @@ type JwtWrapper struct {
 type JwtClaim struct {
 	Email string
 	jwt.StandardClaims
+}
+
+func generateRandomString(length int) (string, error) {
+	bytes := make([]byte, length)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
+func NewJwtWrapper() (*JwtWrapper, error) {
+	secretKey, err := generateRandomString(32)
+	if err != nil {
+		return nil, err
+	}
+
+	return &JwtWrapper{
+		SecretKey:         secretKey,
+		Issuer:            "AuthService",
+		ExpirationMinutes: 15,
+		ExpirationHours:   24,
+	}, nil
 }
 
 // GenerateToken takes an email as an argument and returns a signed JWT token and an error
